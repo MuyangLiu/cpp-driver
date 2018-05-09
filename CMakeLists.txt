@@ -26,11 +26,8 @@ CassProjectVersion("${CASS_INCLUDE_DIR}/cassandra.h" "CASS")
 
 option(CASS_BUILD_DOCS "Build documentation" OFF)
 option(CASS_BUILD_EXAMPLES "Build examples" OFF)
-option(CASS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option(CASS_BUILD_SHARED "Build shared library" ON)
 option(CASS_BUILD_STATIC "Build static library" OFF)
-option(CASS_BUILD_TESTS "Build tests" OFF)
-option(CASS_BUILD_UNIT_TESTS "Build unit tests" OFF)
 option(CASS_DEBUG_CUSTOM_ALLOC "Debug custom allocator" OFF)
 option(CASS_INSTALL_HEADER "Install header file" ON)
 option(CASS_INSTALL_PKG_CONFIG "Install pkg-config file(s)" ON)
@@ -42,22 +39,6 @@ option(CASS_USE_STATIC_LIBS "Link static libraries when building executables" OF
 option(CASS_USE_STD_ATOMIC "Use C++11 atomics library" OFF)
 option(CASS_USE_TCMALLOC "Use tcmalloc" OFF)
 option(CASS_USE_ZLIB "Use zlib" OFF)
-
-# Handle testing dependencies
-if(CASS_BUILD_TESTS)
-  # Enable integration and unit tests
-  set(CASS_BUILD_INTEGRATION_TESTS ON)
-  set(CASS_BUILD_UNIT_TESTS ON)
-endif()
-
-if(CASS_BUILD_INTEGRATION_TESTS)
-  set(CASS_USE_OPENSSL ON) # Required for integration tests
-endif()
-
-if(CASS_BUILD_UNIT_TESTS)
-  set(CASS_BUILD_STATIC ON) # Required for unit tests
-endif()
-
 # Determine which driver target should be used as a dependency
 set(PROJECT_LIB_NAME_TARGET ${PROJECT_LIB_NAME})
 if(CASS_USE_STATIC_LIBS)
@@ -84,32 +65,6 @@ CassUseLibuv()
 # Optional Dependencies
 #------------------------
 CassOptionalDependencies()
-
-#--------------------
-# Test Dependencies
-#--------------------
-
-# libssh2
-if(CASS_BUILD_INTEGRATION_TESTS)
-  if(CASS_USE_LIBSSH2)
-    # Setup the root directory for libssh2
-    set(LIBSSH2_ROOT "${PROJECT_SOURCE_DIR}/lib/libssh2/" $ENV{LIBSSH2_ROOT})
-    set(LIBSSH2_ROOT ${LIBSSH2_ROOT} ${LIBSSH2_ROOT_DIR} $ENV{LIBSSH2_ROOT_DIR})
-
-    # Discover libssh2
-    find_package(LIBSSH2 QUIET)
-    if(LIBSSH2_FOUND)
-      # Assign test libraries (additional boost and libssh2 dependencies)
-      set(CASS_TEST_LIBS ${Boost_LIBRARIES} ${LIBSSH2_LIBRARIES})
-      if(UNIX)
-        set(CASS_TEST_LIBS ${CASS_TEST_LIBS} pthread)
-      endif()
-      add_definitions(-DCASS_USE_LIBSSH2)
-    else()
-      message(STATUS "libssh2 is Unavailable: Building integration tests without libssh2 support")
-    endif()
-  endif()
-endif()
 
 #----------------------
 # Generating API docs
